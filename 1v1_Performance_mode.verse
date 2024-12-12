@@ -12,6 +12,7 @@ using {/UnrealEngine.com/Temporary/SpatialMath}
 
 HideProps := class(creative_device):
 
+    # This is the switch that hides the props/devices or make that visible again.
     @editable
     Switch : switch_device = switch_device{}
 
