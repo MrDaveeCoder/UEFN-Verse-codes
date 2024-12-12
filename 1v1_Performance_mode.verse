@@ -15,17 +15,17 @@ HideProps := class(creative_device):
     @editable
     Switch : switch_device = switch_device{}
 
-    # For this prop you need to place down a small cube and make it invisible, and connect each props and devices that you want to be hid to it.
+    # For this you need to place down a small cube (or any kind of prop) and make it invisible, also attach all the props that you want to hide to this cube.
     @editable
     HideBlock : creative_prop = creative_prop{}
 
     var OgTransform : transform = transform{}
 
-    # Shrinking down and moving away the selected props.
+    # Shrinking down and moving away the props/devices that is attached to the cube.
     HideAll(Agent:agent):void=
         spawn{HideBlock.MoveTo(transform{Scale:= vector3{X:= 0.1, Y:= 0.1, Z:= 0.1}, Rotation:= OgTransform.Rotation, Translation:= vector3{X:= 0.0, Y:= -768.0, Z:= -4224.0}}, 0.1)}
 
-    # Placing the props and devices back to it's original place.
+    # Increasing back and moving back the props/devices that is attached to the cube to their original place.
     ShowAll(Agent:agent):void=
         spawn{HideBlock.MoveTo(OgTransform, 0.1)}
 
@@ -33,6 +33,6 @@ HideProps := class(creative_device):
 
         set OgTransform = HideBlock.GetTransform()
 
-        # If this switch being turned on or off then it will hide or show each prop connected to the prop.
+        # If the switch being turned on or off then it will hide or show each prop connected to the cube.
         Switch.TurnedOnEvent.Subscribe(HideAll)
         Switch.TurnedOffEvent.Subscribe(ShowAll)
