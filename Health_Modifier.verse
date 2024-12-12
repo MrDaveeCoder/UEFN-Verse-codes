@@ -43,7 +43,7 @@ Health_Modifier := class(creative_device):
         TriggerMinusFiveH.TriggeredEvent.Subscribe(OnTriggered7)
         TriggerMinusOneH.TriggeredEvent.Subscribe(OnTriggered8)
 
-    # If the trigger gets triggered the code will get the player's health/shield and adds or removes the amount that was set.
+    # If the trigger gets triggered the code will checks the player/players health/shield and adds or removes the amount that was set.
     OnTriggered1(PossibleAgent : ?agent):void=
         if (Agent := PossibleAgent?):
             if(Player := player[Agent]):
