@@ -6,7 +6,7 @@ using { /Fortnite.com/Characters }
 
 Health_Modifier := class(creative_device):
 
-    # Here you can put any device and as many devices you want.
+    # Here you have to use triggers and as many as you want.
     @editable
     TriggerPlusFiveS : trigger_device = trigger_device{}
 
@@ -31,6 +31,7 @@ Health_Modifier := class(creative_device):
     @editable
     TriggerMinusOneH : trigger_device = trigger_device{}
 
+    # Adds OnTriggered function to all the triggers that was added above.
     OnBegin<override>()<suspends>:void=
         TriggerPlusFiveS.TriggeredEvent.Subscribe(OnTriggered1)
         TriggerPlusOneS.TriggeredEvent.Subscribe(OnTriggered2)
