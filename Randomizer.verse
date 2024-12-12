@@ -21,6 +21,7 @@ Randomizer := class(creative_device):
     @editable
     Teleporterw5:teleporter_device = teleporter_device{}
 
+    # Add an OnAgentEnters function to the mutator zone.
     OnBegin<override>()<suspends>:void=
         Mutator.AgentEntersEvent.Subscribe(OnAgentEnters)
 
