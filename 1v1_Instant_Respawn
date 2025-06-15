@@ -11,7 +11,7 @@ using {/UnrealEngine.com/Temporary/SpatialMath}
  
 Instant_Respawn := class(creative_device):
 
-    respawnposition: vector3=vector3{X:=250.00, Y:=0.01, Z:=161.9}
+    respawnposition: vector3=vector3{X := 250.00, Y := 0.0, Z := 0.0}
  
     @editable
     EliminationManager : elimination_manager_device = elimination_manager_device{}
