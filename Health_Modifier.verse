@@ -1,158 +1,107 @@
 using { /Fortnite.com/Devices }
 using { /Verse.org/Simulation }
-using { /UnrealEngine.com/Temporary/Diagnostics }
 using { /Fortnite.com/Characters }
+using { /Fortnite.com/Game }
 
+MODIFICATIONTYPE := enum{Add,Set,Remove}
+HPTYPE := enum{Health,Shield}
 
-Health_Modifier := class(creative_device):
+health_manager := class(creative_device):
+    @editable DeviceSettings : DefaultSettingsClass = DefaultSettingsClass{}  
+    var SaveHP :logic=true 
+    var ReGrantTime : float = 10.0
+    var DefaultHP : HPAmounts = HPAmounts{}
 
-    # Triggers for the 200 and for the 175 health changing. 
-    @editable
-    Trigger200 : trigger_device = trigger_device{}
-    @editable
-    Trigger175 : trigger_device = trigger_device{}
+    var SavedSubscriptions : [agent]?cancelable = map{} 
 
-    # Switches for the heashot only and for the overshield mode. 
-    # NOTE: you need to place two seperate trigger for both of the switches and set it so that if the trigger is triggered then the switch's state is toggeled (ON/OFF).
-    @editable
-    SwitchHeadshotOnly : switch_device = switch_device{}
-    @editable
-    SwitchOvershield : switch_device = switch_device{}
-
-    # Class devices for the 200 health, for the 175 health and for the overshield options.
-    @editable
-    Class200 : class_and_team_selector_device = class_and_team_selector_device{}
-    @editable
-    Class175 : class_and_team_selector_device = class_and_team_selector_device{}
-    @editable
-    ClassOvershield : class_and_team_selector_device = class_and_team_selector_device{}
-    @editable
-    ClassCustom : class_and_team_selector_device = class_and_team_selector_device{}
-
-    # Triggers for the custom health options.
-    @editable
-    TriggerPlus1S : trigger_device = trigger_device{}
-    @editable
-    TriggerPlus5S : trigger_device = trigger_device{}
-    @editable
-    TriggerMinus1S : trigger_device = trigger_device{}
-    @editable
-    TriggerMinus5S : trigger_device = trigger_device{}
-    @editable
-    TriggerPlus1H : trigger_device = trigger_device{}
-    @editable
-    TriggerPlus5H : trigger_device = trigger_device{}
-    @editable
-    TriggerMinus1H : trigger_device = trigger_device{}
-    @editable
-    TriggerMinus5H : trigger_device = trigger_device{}
-
-
+    @editable HPTriggers : []HPDeviceClass = array{} 
     OnBegin<override>()<suspends>:void=
-        Trigger200.TriggeredEvent.Subscribe(OnTriggered200)
-        Trigger175.TriggeredEvent.Subscribe(OnTriggered175)
-        # -----------------------------------------------
-        SwitchHeadshotOnly.TurnedOnEvent.Subscribe(OnSwitchHeadshotOnlyTurnedOn)
-        SwitchHeadshotOnly.TurnedOffEvent.Subscribe(OnSwitchHeadshotOnlyTurnedOff)
-        SwitchOvershield.TurnedOnEvent.Subscribe(OnSwitchOvershieldTurnedOn)
-        SwitchOvershield.TurnedOffEvent.Subscribe(OnSwitchOvershieldTurnedOff)
-        # -----------------------------------------------
-        TriggerPlus1S.TriggeredEvent.Subscribe(OnTriggeredPlus1S)
-        TriggerPlus5S.TriggeredEvent.Subscribe(OnTriggeredPlus5S)
-        TriggerMinus1S.TriggeredEvent.Subscribe(OnTriggeredMinus1S)
-        TriggerMinus5S.TriggeredEvent.Subscribe(OnTriggeredMinus5S)
-        # -----------------------------------------------
-        TriggerPlus1H.TriggeredEvent.Subscribe(OnTriggeredPlus1H)
-        TriggerPlus5H.TriggeredEvent.Subscribe(OnTriggeredPlus5H)
-        TriggerMinus1H.TriggeredEvent.Subscribe(OnTriggeredMinus1H)
-        TriggerMinus5H.TriggeredEvent.Subscribe(OnTriggeredMinus5H)
-
-    # -----------------------------------------------
-
-    # Segment for the 200 health and for the 175 health change.
-    OnTriggered200(Agent : ?agent):void=
-        AllPlayers := GetPlayspace().GetPlayers()
-        for(allplayers : AllPlayers):
-            Class200.ChangeClass(allplayers)
-
-    OnTriggered175(Agent : ?agent):void=
-        AllPlayers := GetPlayspace().GetPlayers()
-        for(allplayers : AllPlayers):
-            Class175.ChangeClass(allplayers)
-    
-    # -----------------------------------------------
-
-    # Segment for the headshot only and for the overshiekd change.
-    OnSwitchHeadshotOnlyTurnedOn(Agent : agent):void=
-        AllPlayers := GetPlayspace().GetPlayers()
-        for(allplayers : AllPlayers):
-            Class175.ChangeClass(allplayers)
-
-    OnSwitchHeadshotOnlyTurnedOff(Agent : agent):void=
-        AllPlayers := GetPlayspace().GetPlayers()
-        for(allplayers : AllPlayers):
-            Class200.ChangeClass(allplayers)
-
-    OnSwitchOvershieldTurnedOn(Agent : agent):void=
-        AllPlayers := GetPlayspace().GetPlayers()
-        for(allplayers : AllPlayers):
-            ClassOvershield.ChangeClass(allplayers)
+        set SaveHP = DeviceSettings.SaveHP;set ReGrantTime = DeviceSettings.ReGrantTime;set DefaultHP = DeviceSettings.DefaultHP
+        for(HPClass:HPTriggers){HPClass.Init(Self,SaveHP)}
+        if(DeviceSettings.SaveHP?):
+            if(TeamSettings:=DeviceSettings.Optional_TeamSettingDevice?,TeamSettings.GetTransform().Translation.X<>0.0): 
+                TeamSettings.TeamMemberSpawnedEvent.Subscribe(PlayerSpawned)
+            else:
+                for(Player:GetPlayspace().GetPlayers()). PlayerAdded(Player)
+                GetPlayspace().PlayerAddedEvent().Subscribe(PlayerAdded)
+                GetPlayspace().PlayerRemovedEvent().Subscribe(PlayerRemoved) 
+            
+            SyncHP(false)
         
-    OnSwitchOvershieldTurnedOff(Agent : agent):void=
-        AllPlayers := GetPlayspace().GetPlayers()
-        for(allplayers : AllPlayers):
-            Class200.ChangeClass(allplayers)
+    PlayerAdded(Player:player):void= 
+        if(FC:=Player.GetFortCharacter[]):
+            Subscription:=FC.EliminatedEvent().Subscribe(PlayerEliminatedP1)
+            if(set SavedSubscriptions[Player]=option{Subscription}){}
+            SyncHP(option{FC})
 
-    # -----------------------------------------------
+    PlayerRemoved(Player:player):void= 
+        if(SavedSubscription:=SavedSubscriptions[Player]?). SavedSubscription.Cancel()
 
-    # Segment for the custom shield options. 
-    OnTriggeredPlus1S(PossibleAgent : ?agent):void=
-        if (Agent := PossibleAgent?):
-            if(Player := player[Agent]):
-                if(FC := Agent.GetFortCharacter[]):
-                    FC.SetMaxShield(FC.GetMaxShield()+1.0)
 
-    OnTriggeredPlus5S(PossibleAgent : ?agent):void=
-        if (Agent := PossibleAgent?):
-            if(Player := player[Agent]):
-                if(FC := Agent.GetFortCharacter[]):
-                    FC.SetMaxShield(FC.GetMaxShield()+5.0)
+    PlayerEliminatedP1(EliminatedResult:elimination_result):void=spawn{PlayerEliminatedP2(EliminatedResult.EliminatedCharacter)}
+
+    PlayerEliminatedP2(FC:fort_character)<suspends>:void=
+        Sleep(ReGrantTime)
+        SyncHP(option{FC})
+
+    PlayerSpawned(Agent:agent):void= if(FC:=Agent.GetFortCharacter[]){ SyncHP(option{FC} )}
+
+    SyncHP(MFC:?fort_character):void= 
+        if(FC:=MFC?):
+            FC.SetMaxHealth(DefaultHP.Health);FC.SetMaxShield(DefaultHP.Shield);FC.SetHealth(DefaultHP.Health);FC.SetShield(DefaultHP.Shield)            
+        else if(SaveHP?):
+            for(Player:GetPlayspace().GetPlayers()):
+                if(FC:=Player.GetFortCharacter[]):
+                    FC.SetMaxHealth(DefaultHP.Health);FC.SetMaxShield(DefaultHP.Shield);FC.SetHealth(DefaultHP.Health);FC.SetShield(DefaultHP.Shield)
     
-    OnTriggeredMinus1S(PossibleAgent : ?agent):void=
-        if (Agent := PossibleAgent?):
-            if(Player := player[Agent]):
-                if(FC := Agent.GetFortCharacter[]):
-                    FC.SetMaxShield(FC.GetMaxShield()-1.0)
+    ChangeHP(Type:MODIFICATIONTYPE,HPType:HPTYPE,Amount:float,MFC:?fort_character):void=
+        if(SaveHP?):
+            case(HPType):
+                HPTYPE.Health =>
+                    set DefaultHP.Health = CalculateNewHP(DefaultHP.Health,Amount,Type)
+                HPTYPE.Shield =>
+                    set DefaultHP.Shield = CalculateNewHP(DefaultHP.Shield,Amount,Type)
+                    
+            SyncHP(false)
+        else if(FC:=MFC?):
+            case(HPType):
+                HPTYPE.Health =>
+                    NewHealth:=CalculateNewHP(FC.GetMaxHealth(),Amount,Type)
+                    FC.SetMaxHealth(NewHealth);FC.SetHealth(NewHealth)
+                HPTYPE.Shield =>
+                    NewShield:=CalculateNewHP(FC.GetMaxShield(),Amount,Type)
+                    FC.SetMaxShield(NewShield);FC.SetShield(NewShield)
 
-    OnTriggeredMinus5S(PossibleAgent : ?agent):void=
-        if (Agent := PossibleAgent?):
-            if(Player := player[Agent]):
-                if(FC := Agent.GetFortCharacter[]):
-                    FC.SetMaxShield(FC.GetMaxShield()-5.0)
+            SyncHP( option{FC} )
+        
+    CalculateNewHP(PreviousHP:float,Amount:float,ModificationType:MODIFICATIONTYPE):float=
+        case(ModificationType):
+            MODIFICATIONTYPE.Add => PreviousHP+Amount
+            MODIFICATIONTYPE.Remove => PreviousHP-Amount
+            MODIFICATIONTYPE.Set => Amount
 
-    # -----------------------------------------------
+DefaultSettingsClass:=class<concrete>:
+    @editable Optional_TeamSettingDevice : ?team_settings_and_inventory_device = false 
+    @editable var DefaultHP : HPAmounts = HPAmounts{}
+    @editable ReGrantTime : float = 9.0 
+    @editable SaveHP : logic = true 
 
-    # Segment for the custom health options. 
-    OnTriggeredPlus1H(PossibleAgent : ?agent):void=
-        if (Agent := PossibleAgent?):
-            if(Player := player[Agent]):
-                if(FC := Agent.GetFortCharacter[]):
-                    FC.SetMaxHealth(FC.GetMaxHealth()+1.0)
 
-    OnTriggeredPlus5H(PossibleAgent : ?agent):void=
-        if (Agent := PossibleAgent?):
-            if(Player := player[Agent]):
-                if(FC := Agent.GetFortCharacter[]):
-                    FC.SetMaxHealth(FC.GetMaxHealth()+5.0)
-    
-    OnTriggeredMinus1H(PossibleAgent : ?agent):void=
-        if (Agent := PossibleAgent?):
-            if(Player := player[Agent]):
-                if(FC := Agent.GetFortCharacter[]):
-                    FC.SetMaxHealth(FC.GetMaxHealth()-1.0)
+HPDeviceClass:=class<concrete>:
+    @editable ModifyType : MODIFICATIONTYPE = MODIFICATIONTYPE.Add 
+    @editable Amount : float = 10.0
+    @editable Type : HPTYPE = HPTYPE.Health
+    @editable ResetHPOnChange : logic = false
+    @editable Trigger : trigger_device = trigger_device{} 
+    var SelfDevice : health_manager = health_manager{}
+    var SaveHP : logic = true # 
+    Init(HealthDevice:health_manager,ShouldSave:logic):void=
+        set SelfDevice=HealthDevice;set SaveHP=ShouldSave
+        Trigger.TriggeredEvent.Subscribe(Triggered)
+    Triggered(MAgent:?agent):void=
+        SelfDevice.ChangeHP(ModifyType,Type,Amount,option{MAgent?.GetFortCharacter[]})
 
-    OnTriggeredMinus5H(PossibleAgent : ?agent):void=
-        if (Agent := PossibleAgent?):
-            if(Player := player[Agent]):
-                if(FC := Agent.GetFortCharacter[]):
-                    FC.SetMaxHealth(FC.GetMaxHealth()-5.0)
+
+HPAmounts:=class<concrete>:
+    @editable var Health:float=100.0
+    @editable var Shield:float=100.0
