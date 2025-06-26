@@ -20,7 +20,7 @@ Silver_1, Silver_2, Silver_3, Gold_1, Gold_2, Gold_3,
 Platinum_1, Platinum_2, Platinum_3, Diamond_1, Diamond_2, Diamond_3,
 Elite, Champion, Unreal}
 
-# For this part you will need to create a folder named RanUi and also add the rank's image with the names below.
+# For this part you will need to create a folder named RanUi and also add the rank's image with the names below. You can find these images in the RankImages.zip file.
 (RankType:rank_types).GetRankTexture():texture=
     case(RankType):
         rank_types.Unranked => RankUi.Unranked
