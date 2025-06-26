@@ -1,0 +1,45 @@
+using { /Fortnite.com/Devices }
+using { /Verse.org/Simulation }
+using { /Verse.org/Simulation/Tags }
+using { /UnrealEngine.com/Temporary/Diagnostics }
+using {/Fortnite.com/Teams}
+using {/Verse.org/Simulation}
+using {/Fortnite.com/Characters}
+using {/Verse.org/Random}
+using {/Fortnite.com/Game}
+using {/Fortnite.com/FortPlayerUtilities}
+using {/UnrealEngine.com/Temporary/SpatialMath}
+
+ __  __      ____                       
+|  \/  |_ __|  _ \  __ ___   _____  ___ 
+| |\/| | '__| | | |/ _` \ \ / / _ \/ _ \
+| |  | | |  | |_| | (_| |\ V /  __/  __/
+|_|  |_|_|  |____/ \__,_| \_/ \___|\___|
+
+HideProps := class(creative_device):
+
+    # This is the switch that hides the props/devices or make that visible again.
+    @editable
+    Switch : switch_device = switch_device{}
+
+    # For this you need to place down a small cube (or any kind of prop) and make it invisible, also attach all the props that you want to hide to this cube.
+    @editable
+    HideBlock : creative_prop = creative_prop{}
+
+    var OgTransform : transform = transform{}
+
+    # Shrinking down and moving away the props/devices that is attached to the cube.
+    HideAll(Agent:agent):void=
+        spawn{HideBlock.MoveTo(transform{Scale:= vector3{X:= 0.1, Y:= 0.1, Z:= 0.1}, Rotation:= OgTransform.Rotation, Translation:= vector3{X:= 0.0, Y:= -768.0, Z:= -4224.0}}, 0.1)}
+
+    # Increasing back and moving back the props/devices that is attached to the cube to their original place.
+    ShowAll(Agent:agent):void=
+        spawn{HideBlock.MoveTo(OgTransform, 0.1)}
+
+    OnBegin<override>()<suspends>:void=
+
+        set OgTransform = HideBlock.GetTransform()
+
+        # If the switch being turned on or off then it will hide or show each prop connected to the cube.
+        Switch.TurnedOnEvent.Subscribe(HideAll)
+        Switch.TurnedOffEvent.Subscribe(ShowAll)
