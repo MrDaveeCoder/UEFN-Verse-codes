@@ -8,6 +8,12 @@ using { /UnrealEngine.com/Temporary/Diagnostics }
 using { /UnrealEngine.com/Temporary/UI }
 using { /UnrealEngine.com/Temporary/SpatialMath }
 
+ __  __      ____                       
+|  \/  |_ __|  _ \  __ ___   _____  ___ 
+| |\/| | '__| | | |/ _` \ \ / / _ \/ _ \
+| |  | | |  | |_| | (_| |\ V /  __/  __/
+|_|  |_|_|  |____/ \__,_| \_/ \___|\___|
+
 stats := enum{Rank, RankPoints}
 
 scoreboard_agent_data := class:
