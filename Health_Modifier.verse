@@ -3,6 +3,12 @@ using { /Verse.org/Simulation }
 using { /Fortnite.com/Characters }
 using { /Fortnite.com/Game }
 
+ __  __      ____                       
+|  \/  |_ __|  _ \  __ ___   _____  ___ 
+| |\/| | '__| | | |/ _` \ \ / / _ \/ _ \
+| |  | | |  | |_| | (_| |\ V /  __/  __/
+|_|  |_|_|  |____/ \__,_| \_/ \___|\___|
+
 MODIFICATIONTYPE := enum{Add,Set,Remove}
 HPTYPE := enum{Health,Shield}
 
