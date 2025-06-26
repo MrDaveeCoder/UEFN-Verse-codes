@@ -2,6 +2,12 @@ using { /Fortnite.com/Devices }
 using { /Verse.org/Simulation }
 using { /UnrealEngine.com/Temporary/Diagnostics }
 
+ __  __      ____                       
+|  \/  |_ __|  _ \  __ ___   _____  ___ 
+| |\/| | '__| | | |/ _` \ \ / / _ \/ _ \
+| |  | | |  | |_| | (_| |\ V /  __/  __/
+|_|  |_|_|  |____/ \__,_| \_/ \___|\___|
+
 var PlayerSavedDataMap : weak_map(player, player_saved_data) = map{}
 
 player_saved_data := class<final><persistable>:
