@@ -48,4 +48,3 @@ Spectate_Respawn := class(creative_device):
     # Button press event for the pop up dialog device.
     OnBegin<override>()<suspends>:void=
         PopUpDialog.RespondingButtonEvent.Subscribe(RespondingButton1)
-    
