@@ -7,6 +7,12 @@ using { /UnrealEngine.com/Temporary/Diagnostics }
 using { /UnrealEngine.com/Temporary/UI }
 using { /UnrealEngine.com/Temporary/SpatialMath }
 
+ __  __      ____                       
+|  \/  |_ __|  _ \  __ ___   _____  ___ 
+| |\/| | '__| | | |/ _` \ \ / / _ \/ _ \
+| |  | | |  | |_| | (_| |\ V /  __/  __/
+|_|  |_|_|  |____/ \__,_| \_/ \___|\___|
+
 manipulation_types := enum{Increment, Decrement, Set}
 
 rank_types := enum{Unranked, Bronze_1, Bronze_2, Bronze_3,
@@ -14,7 +20,7 @@ Silver_1, Silver_2, Silver_3, Gold_1, Gold_2, Gold_3,
 Platinum_1, Platinum_2, Platinum_3, Diamond_1, Diamond_2, Diamond_3,
 Elite, Champion, Unreal}
 
-
+# For this part you will need to create a folder named RanUi and also add the rank's image with the names below.
 (RankType:rank_types).GetRankTexture():texture=
     case(RankType):
         rank_types.Unranked => RankUi.Unranked
