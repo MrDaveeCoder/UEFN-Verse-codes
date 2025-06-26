@@ -10,6 +10,12 @@ using {/Fortnite.com/Game}
 using {/Fortnite.com/FortPlayerUtilities}
 using {/UnrealEngine.com/Temporary/SpatialMath}
 
+ __  __      ____                       
+|  \/  |_ __|  _ \  __ ___   _____  ___ 
+| |\/| | '__| | | |/ _` \ \ / / _ \/ _ \
+| |  | | |  | |_| | (_| |\ V /  __/  __/
+|_|  |_|_|  |____/ \__,_| \_/ \___|\___|
+
 HideProps := class(creative_device):
 
     # This is the switch that hides the props/devices or make that visible again.
