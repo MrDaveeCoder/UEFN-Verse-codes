@@ -15,6 +15,7 @@ using {/UnrealEngine.com/Temporary/SpatialMath}
 | |  | | |  | |_| | (_| |\ V /  __/  __/
 |_|  |_|_|  |____/ \__,_| \_/ \___|\___|
 #>
+
 Instant_Respawn := class(creative_device):
 
     # This respawnposition will determin where the player will face after respawn. This is in default settings but if you need to you can change the X, Y, Z.
