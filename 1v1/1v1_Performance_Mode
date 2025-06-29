@@ -16,6 +16,7 @@ using {/UnrealEngine.com/Temporary/SpatialMath}
 | |  | | |  | |_| | (_| |\ V /  __/  __/
 |_|  |_|_|  |____/ \__,_| \_/ \___|\___|
 #>
+
 HideProps := class(creative_device):
 
     # This is the switch that hides the props/devices or make that visible again.
