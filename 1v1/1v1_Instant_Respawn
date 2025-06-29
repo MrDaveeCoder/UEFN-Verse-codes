@@ -8,13 +8,13 @@ using {/Verse.org/Random}
 using {/Fortnite.com/Game}
 using {/Fortnite.com/FortPlayerUtilities}
 using {/UnrealEngine.com/Temporary/SpatialMath}
-
+<#
  __  __      ____                       
 |  \/  |_ __|  _ \  __ ___   _____  ___ 
 | |\/| | '__| | | |/ _` \ \ / / _ \/ _ \
 | |  | | |  | |_| | (_| |\ V /  __/  __/
 |_|  |_|_|  |____/ \__,_| \_/ \___|\___|
- 
+#>
 Instant_Respawn := class(creative_device):
 
     # This respawnposition will determin where the player will face after respawn. This is in default settings but if you need to you can change the X, Y, Z.
