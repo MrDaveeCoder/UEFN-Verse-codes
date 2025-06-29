@@ -2,12 +2,13 @@ using { /Fortnite.com/Devices }
 using { /Verse.org/Simulation }
 using { /Fortnite.com/Characters }
 using { /Fortnite.com/Game }
-
+<#
  __  __      ____                       
 |  \/  |_ __|  _ \  __ ___   _____  ___ 
 | |\/| | '__| | | |/ _` \ \ / / _ \/ _ \
 | |  | | |  | |_| | (_| |\ V /  __/  __/
 |_|  |_|_|  |____/ \__,_| \_/ \___|\___|
+#>
 
 MODIFICATIONTYPE := enum{Add,Set,Remove}
 HPTYPE := enum{Health,Shield}
@@ -98,13 +99,15 @@ HPDeviceClass:=class<concrete>:
     @editable Amount : float = 10.0
     @editable Type : HPTYPE = HPTYPE.Health
     @editable ResetHPOnChange : logic = false
-    @editable Trigger : trigger_device = trigger_device{} 
+    @editable Trigger : trigger_device = trigger_device{}
+    @editable Class : class_and_team_selector_device = class_and_team_selector_device{}
     var SelfDevice : health_manager = health_manager{}
     var SaveHP : logic = true # 
     Init(HealthDevice:health_manager,ShouldSave:logic):void=
         set SelfDevice=HealthDevice;set SaveHP=ShouldSave
         Trigger.TriggeredEvent.Subscribe(Triggered)
     Triggered(MAgent:?agent):void=
+        Class.ChangeClass
         SelfDevice.ChangeHP(ModifyType,Type,Amount,option{MAgent?.GetFortCharacter[]})
 
 
