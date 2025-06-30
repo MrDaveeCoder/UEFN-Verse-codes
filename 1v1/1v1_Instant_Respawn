@@ -1,13 +1,11 @@
-using {/Fortnite.com/Devices}
-using {/Verse.org/Simulation}
-using {/UnrealEngine.com/Temporary/Diagnostics}
-using {/Fortnite.com/Teams}
-using {/Verse.org/Simulation}
-using {/Fortnite.com/Characters}
-using {/Verse.org/Random}
-using {/Fortnite.com/Game}
-using {/Fortnite.com/FortPlayerUtilities}
-using {/UnrealEngine.com/Temporary/SpatialMath}
+using { /Fortnite.com/FortPlayerUtilities }
+using { /Fortnite.com/Characters }
+using { /Fortnite.com/Game }
+using { /Fortnite.com/Devices }
+using { /Verse.org/Random }
+using { /Verse.org/Simulation }
+using { /UnrealEngine.com/Temporary/SpatialMath }
+using { /UnrealEngine.com/Temporary/Diagnostics }
 <#
  __  __      ____                       
 |  \/  |_ __|  _ \  __ ___   _____  ___ 
@@ -18,28 +16,21 @@ using {/UnrealEngine.com/Temporary/SpatialMath}
 
 Instant_Respawn := class(creative_device):
 
-    # This respawnposition will determin where the player will face after respawn. This is in default settings but if you need to you can change the X, Y, Z.
-    respawnposition: vector3=vector3{X := 250.00, Y := 0.0, Z := 0.0}
-
-    # Elimination manager to check when a player gets eliminated.
-    @editable
-    EliminationManager : elimination_manager_device = elimination_manager_device{}
-
-    # Teleporters for both players. This is where they will respawn if they are eliminated.
-    @editable
-    Teleporter1 : teleporter_device = teleporter_device{}
-    @editable
-    Teleporter2 : teleporter_device = teleporter_device{}
+    # Player spawners for both of the players.
+    @editable var SpawnsPad : []player_spawner_device = array{}
+    # Elimination manager that checks when a player gets eliminated.
+    @editable ElimManager : elimination_manager_device = elimination_manager_device{}
  
-    OnBegin<override>()<suspends>:void=
-        EliminationManager.EliminatedEvent.Subscribe(SelfEliminated)
+    SelfEliminated(Agent:agent)<suspends>:void=
+      Sleep(0.1)
+            PadRandom := GetRandomInt(1,SpawnsPad.Length)
+            if ( RandomInt := SpawnsPad[PadRandom-1] ): 
+                Transform := RandomInt.GetTransform()
+                Agent.Respawn(Transform.Translation, Transform.Rotation)
 
-    # This will respawn the player after a short amount of time.
-    NowRespawn(Agent : agent)<suspends>:void=
-        Sleep(0.1)
-        Agent.Respawn(respawnposition, rotation{})
-        Teleporter1.Teleport(Agent)
-        Teleporter1.Teleport(Agent)
-    
-    SelfEliminated(Agent : agent):void=
-        spawn{NowRespawn(Agent)}
+    SE(Agent:agent):void=
+      spawn{SelfEliminated(Agent)}
+
+
+    OnBegin<override>()<suspends>:void=
+      ElimManager.EliminatedEvent.Subscribe(SE)
