@@ -15,22 +15,19 @@ using { /UnrealEngine.com/Temporary/Diagnostics }
 #>
 
 Instant_Respawn := class(creative_device):
-
-    # Player spawners for both of the players.
-    @editable var SpawnsPad : []player_spawner_device = array{}
-    # Elimination manager that checks when a player gets eliminated.
+ 
+    @editable var Teleporter : []teleporter_device = array{}
     @editable ElimManager : elimination_manager_device = elimination_manager_device{}
  
     SelfEliminated(Agent:agent)<suspends>:void=
       Sleep(0.1)
-            PadRandom := GetRandomInt(1,SpawnsPad.Length)
-            if ( RandomInt := SpawnsPad[PadRandom-1] ): 
+            PadRandom := GetRandomInt(1,Teleporter.Length)
+            if ( RandomInt := Teleporter[PadRandom-1] ): 
                 Transform := RandomInt.GetTransform()
                 Agent.Respawn(Transform.Translation, Transform.Rotation)
 
     SE(Agent:agent):void=
       spawn{SelfEliminated(Agent)}
-
 
     OnBegin<override>()<suspends>:void=
       ElimManager.EliminatedEvent.Subscribe(SE)
