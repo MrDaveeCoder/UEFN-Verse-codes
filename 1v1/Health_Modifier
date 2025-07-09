@@ -10,23 +10,26 @@ using { /Fortnite.com/Game }
 |_|  |_|_|  |____/ \__,_| \_/ \___|\___|
 #>
 
+# This sets the health types a player can change, also weather it should add, set or remove the choosen type of health's number.
 MODIFICATIONTYPE := enum{Add,Set,Remove}
 HPTYPE := enum{Health,Shield}
 
+# Class for the default HP section.
 health_manager := class(creative_device):
     @editable DeviceSettings : DefaultSettingsClass = DefaultSettingsClass{}  
-    var SaveHP :logic=true 
+    var SaveHP : logic = true 
     var ReGrantTime : float = 10.0
     var DefaultHP : HPAmounts = HPAmounts{}
 
     var SavedSubscriptions : [agent]?cancelable = map{} 
 
+    # This trigger is for the HP switch.
     @editable HPTriggers : []HPDeviceClass = array{} 
     OnBegin<override>()<suspends>:void=
         set SaveHP = DeviceSettings.SaveHP;set ReGrantTime = DeviceSettings.ReGrantTime;set DefaultHP = DeviceSettings.DefaultHP
         for(HPClass:HPTriggers){HPClass.Init(Self,SaveHP)}
         if(DeviceSettings.SaveHP?):
-            if(TeamSettings:=DeviceSettings.Optional_TeamSettingDevice?,TeamSettings.GetTransform().Translation.X<>0.0): 
+            if(TeamSettings := DeviceSettings.Optional_TeamSettingDevice?,TeamSettings.GetTransform().Translation.X<>0.0): 
                 TeamSettings.TeamMemberSpawnedEvent.Subscribe(PlayerSpawned)
             else:
                 for(Player:GetPlayspace().GetPlayers()). PlayerAdded(Player)
@@ -34,18 +37,20 @@ health_manager := class(creative_device):
                 GetPlayspace().PlayerRemovedEvent().Subscribe(PlayerRemoved) 
             
             SyncHP(false)
-        
+
+    # Checks all the players on the map.
     PlayerAdded(Player:player):void= 
         if(FC:=Player.GetFortCharacter[]):
-            Subscription:=FC.EliminatedEvent().Subscribe(PlayerEliminatedP1)
-            if(set SavedSubscriptions[Player]=option{Subscription}){}
+            Subscription := FC.EliminatedEvent().Subscribe(PlayerEliminatedP1)
+            if(set SavedSubscriptions[Player] = option{Subscription}){}
             SyncHP(option{FC})
 
+    # Checks if a player left the map.
     PlayerRemoved(Player:player):void= 
-        if(SavedSubscription:=SavedSubscriptions[Player]?). SavedSubscription.Cancel()
+        if(SavedSubscription := SavedSubscriptions[Player]?). SavedSubscription.Cancel()
 
 
-    PlayerEliminatedP1(EliminatedResult:elimination_result):void=spawn{PlayerEliminatedP2(EliminatedResult.EliminatedCharacter)}
+    PlayerEliminatedP1(EliminatedResult:elimination_result):void= spawn{PlayerEliminatedP2(EliminatedResult.EliminatedCharacter)}
 
     PlayerEliminatedP2(FC:fort_character)<suspends>:void=
         Sleep(ReGrantTime)
@@ -53,6 +58,7 @@ health_manager := class(creative_device):
 
     PlayerSpawned(Agent:agent):void= if(FC:=Agent.GetFortCharacter[]){ SyncHP(option{FC} )}
 
+    # This Syncs the player's helth if it was changed.
     SyncHP(MFC:?fort_character):void= 
         if(FC:=MFC?):
             FC.SetMaxHealth(DefaultHP.Health);FC.SetMaxShield(DefaultHP.Shield);FC.SetHealth(DefaultHP.Health);FC.SetShield(DefaultHP.Shield)            
@@ -79,7 +85,7 @@ health_manager := class(creative_device):
                     NewShield:=CalculateNewHP(FC.GetMaxShield(),Amount,Type)
                     FC.SetMaxShield(NewShield);FC.SetShield(NewShield)
 
-            SyncHP( option{FC} )
+            SyncHP(option{FC})
         
     CalculateNewHP(PreviousHP:float,Amount:float,ModificationType:MODIFICATIONTYPE):float=
         case(ModificationType):
@@ -87,30 +93,31 @@ health_manager := class(creative_device):
             MODIFICATIONTYPE.Remove => PreviousHP-Amount
             MODIFICATIONTYPE.Set => Amount
 
+# This sets the default HP of a player.
 DefaultSettingsClass:=class<concrete>:
     @editable Optional_TeamSettingDevice : ?team_settings_and_inventory_device = false 
     @editable var DefaultHP : HPAmounts = HPAmounts{}
     @editable ReGrantTime : float = 9.0 
     @editable SaveHP : logic = true 
 
-
+# This sets the HP if a trigger has been shot.
 HPDeviceClass:=class<concrete>:
     @editable ModifyType : MODIFICATIONTYPE = MODIFICATIONTYPE.Add 
     @editable Amount : float = 10.0
     @editable Type : HPTYPE = HPTYPE.Health
     @editable ResetHPOnChange : logic = false
     @editable Trigger : trigger_device = trigger_device{}
-    @editable Class : class_and_team_selector_device = class_and_team_selector_device{}
+    @editable Class : class_and_team_selector_device = class_and_team_selector_device{} # This is needed to save the changed health after elimination
     var SelfDevice : health_manager = health_manager{}
     var SaveHP : logic = true # 
     Init(HealthDevice:health_manager,ShouldSave:logic):void=
-        set SelfDevice=HealthDevice;set SaveHP=ShouldSave
+        set SelfDevice = HealthDevice;set SaveHP = ShouldSave
         Trigger.TriggeredEvent.Subscribe(Triggered)
     Triggered(MAgent:?agent):void=
         Class.ChangeClass
         SelfDevice.ChangeHP(ModifyType,Type,Amount,option{MAgent?.GetFortCharacter[]})
 
-
+# Changeable HP amounts
 HPAmounts:=class<concrete>:
-    @editable var Health:float=100.0
-    @editable var Shield:float=100.0
+    @editable var Health:float = 100.0
+    @editable var Shield:float = 100.0
