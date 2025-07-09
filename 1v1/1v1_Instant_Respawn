@@ -21,7 +21,7 @@ Instant_Respawn := class(creative_device):
     # Elimination manager to check weather a player was eliminated or not.
     @editable ElimManager : elimination_manager_device = elimination_manager_device{}
 
-    # Checks weather a player needs to respawn or no.
+    # Checks if a player needs to respawn or no.
     SelfEliminated(Agent:agent)<suspends>:void=
       Sleep(0.1)
             PadRandom := GetRandomInt(1,Teleporter.Length)
