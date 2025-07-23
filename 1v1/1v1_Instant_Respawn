@@ -16,23 +16,28 @@ using { /UnrealEngine.com/Temporary/Diagnostics }
 
 Instant_Respawn := class(creative_device):
 
-    # Teleporters for the players to respawn.
-    @editable var Teleporter : []teleporter_device = array{}
-    # Elimination manager to check weather a player was eliminated or not.
-    @editable ElimManager : elimination_manager_device = elimination_manager_device{}
+    respawnposition: vector3=vector3{X:= 250.00, Y:= 0.01, Z:= 161.9}
 
-    # Checks if a player needs to respawn or no.
-    SelfEliminated(Agent:agent)<suspends>:void=
-      Sleep(0.1)
-            PadRandom := GetRandomInt(1,Teleporter.Length)
-            if ( RandomInt := Teleporter[PadRandom-1] ): 
-                Transform := RandomInt.GetTransform()
-                Agent.Respawn(Transform.Translation, Transform.Rotation)
+    # Elimination manager to check weather a player was eliminated or not.    
+    @editable
+    ElimManager : elimination_manager_device = elimination_manager_device{}
+    # Teleporters for the players to respawn.
+    @editable
+    TeleporterTeam1 : teleporter_device = teleporter_device{}
+    @editable
+    TeleporterTeam2 : teleporter_device = teleporter_device{}
+
+    # Checks the players
+    NowRespawn(Agent: agent)<suspends>:void=
+       Sleep(0.1)
+       Agent.Respawn(respawnposition, rotation{})
+       TeleporterTeam1.Teleport(Agent)
+       TeleporterTeam2.Teleport(Agent)
 
     # This respawns the eliminated player.
     SE(Agent:agent):void=
-      spawn{SelfEliminated(Agent)}
+       spawn{NowRespawn(Agent)}
 
     # Checks when a player is eliminated.
     OnBegin<override>()<suspends>:void=
-      ElimManager.EliminatedEvent.Subscribe(SE)
+       ElimManager.EliminatedEvent.Subscribe(SE)
