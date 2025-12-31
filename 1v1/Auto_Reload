@@ -1,0 +1,69 @@
+using { /Fortnite.com/Devices }
+using { /Verse.org/Simulation }
+using { /UnrealEngine.com/Temporary/Diagnostics }
+
+
+auto_reload_system := class(creative_device):
+
+    @editable
+    Teleporters : []teleporter_device = array{}
+
+    @editable
+    PlayerSpawners : []player_spawner_device = array{}
+
+    @editable
+    WeaponsToReload : weapons_to_reload = weapons_to_reload.All
+
+    @editable
+    Weapons : []auto_reload_weapon = array{}
+
+    OnBegin<override>()<suspends>:void=
+        Sleep(0.0)
+        DeviceSetup()
+
+    DeviceSetup():void=
+        for (TP : Teleporters):
+            TP.TeleportedEvent.Subscribe(CheckWeapons)
+
+        for (PS : PlayerSpawners):
+            PS.SpawnedEvent.Subscribe(CheckWeapons)
+
+        for (Weapon : Weapons):
+            Weapon.Init(Self)
+
+    CheckWeapons(MaybeAgent:agent):void=
+        for (Weapon : Weapons, Agent := MaybeAgent):
+            Weapon.CheckForWeapon(Agent)
+
+auto_reload_weapon := class<concrete>:
+
+    @editable
+    ConditionalB : conditional_button_device = conditional_button_device{}
+
+    @editable
+    ItemG : item_granter_device = item_granter_device{}
+
+    var VerseDevice : auto_reload_system = auto_reload_system{}
+
+    Init(MainDevice : auto_reload_system):void=
+        set VerseDevice = MainDevice
+
+    CheckForWeapon(Agent:agent):void=
+        case (VerseDevice.WeaponsToReload):
+            weapons_to_reload.All =>
+                if (ConditionalB.HasAllItems[Agent]):
+                    ConditionalB.Activate(Agent)
+                    ItemG.GrantItem(Agent)
+
+            weapons_to_reload.Held =>
+                if (ConditionalB.IsHoldingItem[Agent]):
+                    ConditionalB.Activate(Agent)
+                    ItemG.GrantItem(Agent)
+            
+            weapons_to_reload.None =>
+
+weapons_to_reload := enum:
+
+    All
+    Held
+    None
