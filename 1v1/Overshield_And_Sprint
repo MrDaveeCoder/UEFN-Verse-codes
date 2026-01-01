@@ -1,0 +1,150 @@
+using {/Fortnite.com/Devices}
+using {/Verse.org/Simulation}
+using {/Fortnite.com/Characters}
+using {/Fortnite.com/Game}
+
+EachP := class():
+    Player : player
+    var CurrentMaxShield : float = 0.0
+    var CurrentMaxHealth : float = 0.0
+
+SprintAndOvershield := class(creative_device):
+    @editable
+    OverShieldTrigger : trigger_device = trigger_device{}
+    @editable
+    SprintTrigger : trigger_device = trigger_device{}
+
+    @editable
+    OverShieldTriggerAdd : trigger_device = trigger_device{}
+    @editable
+    OverShieldTriggerRemove : trigger_device = trigger_device{}
+
+    @editable
+    Switch200 : switch_device = switch_device{}
+    @editable
+    Switch175 : switch_device = switch_device{}
+
+    @editable
+    SwitchOvershield : switch_device = switch_device{}
+    @editable
+    SwitchSprint : switch_device = switch_device{}
+
+    @editable
+    var SprintEnabled : logic = false
+    @editable
+    var OvershieldEnabled : logic = false
+
+    @editable
+    NoSprintNoOvershield200 : class_and_team_selector_device = class_and_team_selector_device{}
+    @editable
+    NoSprintOvershield200 : class_and_team_selector_device = class_and_team_selector_device{}
+    @editable
+    SprintNoOvershield200 : class_and_team_selector_device = class_and_team_selector_device{}
+    @editable
+    SprintOvershield200 : class_and_team_selector_device = class_and_team_selector_device{}
+
+    @editable
+    NoSprintNoOvershield175 : class_and_team_selector_device = class_and_team_selector_device{}
+    @editable
+    NoSprintOvershield175 : class_and_team_selector_device = class_and_team_selector_device{}
+    @editable
+    SprintNoOvershield175 : class_and_team_selector_device = class_and_team_selector_device{}
+    @editable
+    SprintOvershield175 : class_and_team_selector_device = class_and_team_selector_device{}
+
+    var PlayerMap : [player]EachP = map{}
+
+    OnBegin<override>()<suspends>:void=
+
+        OverShieldTrigger.TriggeredEvent.Subscribe(ToggleOvershield)
+        SprintTrigger.TriggeredEvent.Subscribe(ToggleSprint)
+
+        NoSprintNoOvershield200.ClassSwitchedEvent.Subscribe(ChangeHealthAndShield)
+        NoSprintOvershield200.ClassSwitchedEvent.Subscribe(ChangeHealthAndShield)
+        SprintNoOvershield200.ClassSwitchedEvent.Subscribe(ChangeHealthAndShield)
+        SprintOvershield200.ClassSwitchedEvent.Subscribe(ChangeHealthAndShield)
+
+        NoSprintNoOvershield175.ClassSwitchedEvent.Subscribe(ChangeHealthAndShield)
+        NoSprintOvershield175.ClassSwitchedEvent.Subscribe(ChangeHealthAndShield)
+        SprintNoOvershield175.ClassSwitchedEvent.Subscribe(ChangeHealthAndShield)
+        SprintOvershield175.ClassSwitchedEvent.Subscribe(ChangeHealthAndShield)
+
+        GetPlayspace().PlayerAddedEvent().Subscribe(OnPlayerJoined)
+        GetPlayspace().PlayerRemovedEvent().Subscribe(OnPlayerLeft)
+        for (Player : GetPlayspace().GetPlayers()):
+            AddPlayerToMap(Player)
+
+    ChangeHealthAndShield(Agent:agent):void=
+        if (Player := player[Agent], ExistingPlayer := PlayerMap[Player], FC := Agent.GetFortCharacter[]):
+            FC.SetMaxShield(ExistingPlayer.CurrentMaxShield)
+            FC.SetMaxHealth(ExistingPlayer.CurrentMaxHealth)
+
+    ToggleOvershield(Agent:?agent):void=
+        if (NewAgent := Agent?):
+            if (Player := player[NewAgent], PlayerExisting := PlayerMap[Player]):
+                if (FC := NewAgent.GetFortCharacter[]):
+                    set PlayerExisting.CurrentMaxShield = FC.GetMaxShield()
+                    set PlayerExisting.CurrentMaxHealth = FC.GetMaxHealth()
+                    if (OvershieldEnabled?):
+                        set OvershieldEnabled = false
+                        OverShieldTriggerAdd.Trigger(NewAgent)
+                    else:
+                        set OvershieldEnabled = true
+                        OverShieldTriggerRemove.Trigger(NewAgent)
+                    SwitchPlayers200()
+                    SwitchPlayers175()
+
+    ToggleSprint(Agent:?agent):void=
+        if (NewAgent := Agent?):
+            if (Player := player[NewAgent], PlayerExisting := PlayerMap[Player]):
+                if (FC := NewAgent.GetFortCharacter[]):
+                    set PlayerExisting.CurrentMaxShield = FC.GetMaxShield()
+                    set PlayerExisting.CurrentMaxHealth = FC.GetMaxHealth()
+                    if (SprintEnabled?):
+                        set SprintEnabled = false
+                    else:
+                        set SprintEnabled = true
+                    SwitchPlayers200()
+                    SwitchPlayers175()
+
+    SwitchPlayers200():void=
+        if (Switch200.GetCurrentState[]):
+            for (Player : GetPlayspace().GetPlayers(), FC := Player.GetFortCharacter[], Agent := FC.GetAgent[]):
+                if (SprintEnabled? and OvershieldEnabled?):
+                    SprintOvershield200.ChangeClass(Agent)
+                else if (not SprintEnabled? and OvershieldEnabled?):
+                    NoSprintOvershield200.ChangeClass(Agent)
+                else if (SprintEnabled? and not OvershieldEnabled?):
+                    SprintNoOvershield200.ChangeClass(Agent)
+                else if (not SprintEnabled? and not OvershieldEnabled?):
+                    NoSprintNoOvershield200.ChangeClass(Agent)
+
+    SwitchPlayers175():void=
+        if (Switch175.GetCurrentState[]):
+            for (Player : GetPlayspace().GetPlayers(), FC := Player.GetFortCharacter[], Agent := FC.GetAgent[]):
+                if (SprintEnabled? and OvershieldEnabled?):
+                    SprintOvershield175.ChangeClass(Agent)
+                else if (not SprintEnabled? and OvershieldEnabled?):
+                    NoSprintOvershield175.ChangeClass(Agent)
+                else if (SprintEnabled? and not OvershieldEnabled?):
+                    SprintNoOvershield175.ChangeClass(Agent)
+                else if (not SprintEnabled? and not OvershieldEnabled?):
+                    NoSprintNoOvershield175.ChangeClass(Agent)
+
+    AddPlayerToMap(Player:player):void=
+        if (not PlayerMap[Player], FC := Player.GetFortCharacter[]):
+            if (set PlayerMap[Player] = EachP{Player := Player, CurrentMaxShield := FC.GetMaxShield(), CurrentMaxHealth := FC.GetMaxHealth()}):
+                SwitchPlayers200()
+                SwitchPlayers175() 
+
+    OnPlayerJoined(Player:player):void=
+        AddPlayerToMap(Player)
+
+    OnPlayerLeft(Player:player):void=
+        set PlayerMap = RemoveKeyFromMap(PlayerMap, Player)
+
+    RemoveKeyFromMap(OgMap:[player]EachP, Player:player):[player]EachP=
+        var NewMap:[player]EachP = map{}
+        for (Key -> Value : OgMap, Key <> Player):
+            set NewMap = ConcatenateMaps(NewMap, map{Key => Value})
+        return NewMap
